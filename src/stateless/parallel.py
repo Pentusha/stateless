@@ -276,11 +276,9 @@ class Parallel:
             raise RuntimeError("Parallel must be used as a context manager")
         if self.state == "exited":
             raise RuntimeError("Parallel context manager has already exited")
-        thread_tasks_and_indices = [
+        if thread_tasks_and_indices := [
             (i, task) for i, task in enumerate(tasks) if task.use_threads
-        ]
-
-        if thread_tasks_and_indices:
+        ]:
             thread_indices, thread_tasks = zip(*thread_tasks_and_indices)
             thread_results = self.run_thread_tasks(runtime, thread_tasks)
             for result in thread_results:
@@ -290,11 +288,9 @@ class Parallel:
             thread_results = ()
             thread_indices = ()
 
-        cpu_tasks_and_indices = [
+        if cpu_tasks_and_indices := [
             (i, task) for i, task in enumerate(tasks) if not task.use_threads
-        ]
-
-        if cpu_tasks_and_indices:
+        ]:
             cpu_indices, cpu_tasks = zip(*cpu_tasks_and_indices)
             cpu_results = self.run_process_tasks(runtime, cpu_tasks)
             for result in cpu_results:
@@ -479,7 +475,4 @@ def parallel(  # type: ignore
     runtime: "Runtime[Parallel]" = cast("Runtime[Parallel]", (yield Parallel))
     ability = runtime.get_ability(Parallel)
     result = ability.run(runtime, tasks)  # type: ignore
-    if isinstance(result, Exception):
-        return (yield from throw(result))
-    else:
-        return result
+    return (yield from throw(result)) if isinstance(result, Exception) else result
