@@ -80,9 +80,8 @@ def catch(f: Callable[P, Effect[A, E, R]]) -> Callable[P, Depend[A, E | R]]:
             while True:
                 if isinstance(ability_or_error, Exception):
                     return ability_or_error  # type: ignore
-                else:
-                    ability = yield ability_or_error
-                    ability_or_error = effect.send(ability)
+                ability = yield ability_or_error
+                ability_or_error = effect.send(ability)
         except StopIteration as e:
             return e.value  # type: ignore
 
